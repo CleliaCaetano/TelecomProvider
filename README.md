@@ -28,8 +28,11 @@ This project offers a comprehensive examination of the operations of a fictional
   * `seaborn`
 
 ## ER Diagram Preview
-
-![ER Diagram](https://raw.githubusercontent.com/CleliaCaetano/TelecomProvider/main/telecomprovider_updated.png)
+<h3> Entity-Relationship Diagram (EER)</h3>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/CleliaCaetano/TelecomProvider/main/telecomprovider_updated.png" width="300" style="border:1px solid #ddd; border-radius:4px; padding:4px;" alt="EER Diagram"/>
+</p>
+<p align="center"><em>Figure: EER diagram of the TelecomProvider database schema</em></p>
 
 ## Getting Started
 
