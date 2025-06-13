@@ -433,12 +433,12 @@ BEGIN
         -- If the customer does not exist, signal an SQL error.
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Error: Customer does not exist.';
-    END IF; 											                        -- Close the IF statement
-END $$ 											                              -- Close the PROCEDURE block
+    END IF;                                               -- Close the IF statement
+END $$                                                    -- Close the PROCEDURE block
 
 DELIMITER ;
 
-CALL CreateSupportTicket(				                          -- Create a valid support ticket
+CALL CreateSupportTicket(                                 -- Create a valid support ticket
     3,                                                    -- Existing CustomerID
     'Billing Issue',                                      -- IssueType
     'Open',                                               -- Status
