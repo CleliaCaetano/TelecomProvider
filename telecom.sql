@@ -268,7 +268,7 @@ FROM
     Subscription s ON c.CustomerID = s.CustomerID
 WHERE
     s.PaymentStatus = 'Unpaid'
-ORDER BY s.BillingMonth DESC , s.TotalAmount DESC;                              -- Prioritize most recent and highest unpaid amounts
+ORDER BY s.BillingMonth DESC , s.TotalAmount DESC;      -- Prioritize most recent and highest unpaid amounts
 -- ------------------------------------------------------------------------------------
 
 -- 3.3.2 Transactions & ACID Control (Atomicity, Consistency, Isolation, Durability)
@@ -277,10 +277,10 @@ ORDER BY s.BillingMonth DESC , s.TotalAmount DESC;                              
 -- The payment status update is managed carefully, allowing rollback if needed to maintain accurate billing records.
 -- This process protects revenue tracking and supports effective customer account management through controlled transactional updates.
 
-ALTER TABLE Subscription							-- Add DiscountApplied flag (Run once during setup).
+ALTER TABLE Subscription							                 -- Add DiscountApplied flag (Run once during setup).
 ADD COLUMN DiscountApplied BOOLEAN DEFAULT FALSE;
 
-START TRANSACTION;  -- Controlled Transaction to Apply Discount Once & Optionally Mark as Paid.
+START TRANSACTION;                                     -- Controlled Transaction to Apply Discount Once & Optionally Mark as Paid.
 
 UPDATE Subscription 
 SET 
@@ -288,7 +288,7 @@ SET
     DiscountApplied = FALSE
 WHERE
     SubscriptionID = 9
-        AND DiscountApplied = TRUE -- Reverts if previously discounted
+        AND DiscountApplied = TRUE                      -- Reverts if previously discounted
 
 UPDATE Subscription 
 SET 
@@ -298,7 +298,7 @@ WHERE
     SubscriptionID = 9
         AND DiscountApplied = FALSE                     -- Prevents repeated discount
 
-SAVEPOINT BeforeStatusUpdate;  -- Savepoint before marking as paid
+SAVEPOINT BeforeStatusUpdate;                           -- Savepoint before marking as paid
 
 UPDATE Subscription 
 SET 
@@ -334,7 +334,7 @@ FROM
 
 SELECT 									   -- Total amount spent by each customer (paid only)
     CustomerID, 
-    SUM(TotalAmount) AS TotalSpent         -- Total revenue from each customer
+    SUM(TotalAmount) AS TotalSpent           -- Total revenue from each customer
 FROM 
     Subscription
 WHERE 
@@ -346,7 +346,7 @@ SELECT                                      -- Subscription trends: compare curr
     CustomerID,                             -- Customer ID for reference
     BillingMonth,                           -- Month of the bill
     TotalAmount,                            -- Current month's billed amount
-    LAG(TotalAmount) OVER (					-- Lag: Show subscription history per customer
+    LAG(TotalAmount) OVER (				        	-- Lag: Show subscription history per customer
         PARTITION BY CustomerID 
         ORDER BY StartDate
     ) AS PreviousMonthAmount,              -- Previous month’s bill for comparison
@@ -375,7 +375,7 @@ CREATE PROCEDURE simulate_loop()
 BEGIN
   DECLARE i INT DEFAULT 1;
   
-  DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 							-- Basic error handling example
+  DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 					-- Basic error handling example
   BEGIN 
     SELECT CONCAT('Error occurred at CustomerID = ', i) AS ErrorMessage;
   END;
@@ -433,12 +433,12 @@ BEGIN
         -- If the customer does not exist, signal an SQL error.
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Error: Customer does not exist.';
-    END IF; 											 -- Close the IF statement
-END $$ 											         -- Close the PROCEDURE block
+    END IF; 											                        -- Close the IF statement
+END $$ 											                              -- Close the PROCEDURE block
 
 DELIMITER ;
 
-CALL CreateSupportTicket(				                  -- Create a valid support ticket
+CALL CreateSupportTicket(				                          -- Create a valid support ticket
     3,                                                    -- Existing CustomerID
     'Billing Issue',                                      -- IssueType
     'Open',                                               -- Status
