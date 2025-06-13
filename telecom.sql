@@ -277,7 +277,7 @@ ORDER BY s.BillingMonth DESC , s.TotalAmount DESC;      -- Prioritize most recen
 -- The payment status update is managed carefully, allowing rollback if needed to maintain accurate billing records.
 -- This process protects revenue tracking and supports effective customer account management through controlled transactional updates.
 
-ALTER TABLE Subscription							                 -- Add DiscountApplied flag (Run once during setup).
+ALTER TABLE Subscription                               -- Add DiscountApplied flag (Run once during setup).
 ADD COLUMN DiscountApplied BOOLEAN DEFAULT FALSE;
 
 START TRANSACTION;                                     -- Controlled Transaction to Apply Discount Once & Optionally Mark as Paid.
@@ -332,7 +332,7 @@ FROM
 -- 3.3.4 Revenue Insights Using Aggregates & Window Functions
 -- Purpose: Analyze customer spending behavior, subscription trends, and cumulative revenue for financial monitoring.
 
-SELECT 									   -- Total amount spent by each customer (paid only)
+SELECT 									                     -- Total amount spent by each customer (paid only)
     CustomerID, 
     SUM(TotalAmount) AS TotalSpent           -- Total revenue from each customer
 FROM 
