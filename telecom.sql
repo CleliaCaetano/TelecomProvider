@@ -30,35 +30,32 @@ ADD CONSTRAINT unique_email UNIQUE (Email);
 -- Purpose: Stores information about service plans.
 
 CREATE TABLE Plan (
-PlanID			INT            AUTO_INCREMENT PRIMARY KEY,
-PlanName		VARCHAR(100)   NOT NULL,
-Type			ENUM('Call', 'SMS', 'Data', 'Mixed'),
-MonthlyCost		DECIMAL(10, 2)	NOT NULL,
-Description		TEXT
-) ENGINE=InnoDB;
+    PlanID INT AUTO_INCREMENT PRIMARY KEY,
+    PlanName VARCHAR(100) NOT NULL,
+    Type ENUM('Call', 'SMS', 'Data', 'Mixed'),
+    MonthlyCost DECIMAL(10 , 2 ) NOT NULL,
+    Description TEXT
+)  ENGINE=INNODB;
 
 -- Table: Subscription
 -- Purpose: Records which customer is subscribed to which plan, including billing and status details.
 
 CREATE TABLE Subscription (
-SubscriptionID	INT            AUTO_INCREMENT PRIMARY KEY,
-CustomerID		INT			   NOT NULL,
-PlanID			INT			   NOT NULL, 
-StartDate		DATE		   NOT NULL, 
-EndDate			DATE,
-BillingMonth	VARCHAR(10)    NOT NULL,
-TotalAmount		DECIMAL(10, 2)	NOT NULL,
-PaymentStatus	ENUM('Paid', 'Unpaid') NOT NULL,
-
- -- Ensure every subscription stays valid and consistent:
- -- ON DELETE RESTRICT: prevents deleting a Customer or Plan that is still linked to a Subscription,
- --                     protects data integrity.
-  FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID)
-    ON DELETE RESTRICT,
-
-  FOREIGN KEY (PlanID) REFERENCES Plan(PlanID)
-    ON DELETE RESTRICT
-) ENGINE=InnoDB;  -- InnoDB enables ACID, transactions, FK enforcement in MySQL.
+    SubscriptionID INT AUTO_INCREMENT PRIMARY KEY,
+    CustomerID INT NOT NULL,
+    PlanID INT NOT NULL,
+    StartDate DATE NOT NULL,
+    EndDate DATE,
+    BillingMonth VARCHAR(10) NOT NULL,
+    TotalAmount DECIMAL(10 , 2 ) NOT NULL,
+    PaymentStatus ENUM('Paid', 'Unpaid') NOT NULL,
+    FOREIGN KEY (CustomerID)
+        REFERENCES Customer (CustomerID)
+        ON DELETE RESTRICT,
+    FOREIGN KEY (PlanID)
+        REFERENCES Plan (PlanID)
+        ON DELETE RESTRICT
+)  ENGINE=INNODB;  -- InnoDB enables ACID, transactions, FK enforcement in MySQL.
 
 -- Add a UNIQUE constraint for future protection
 ALTER TABLE Subscription
@@ -68,36 +65,34 @@ ADD CONSTRAINT uc_unique_subscription UNIQUE (CustomerID, PlanID, BillingMonth);
 -- Purpose: Logs detailed usage activity (calls, SMS, data) linked to a specific subscription.
 
 CREATE TABLE UsageRecord (
-UsageID			INT            AUTO_INCREMENT PRIMARY KEY,
-SubscriptionID	INT			   NOT NULL,
-UsageType		ENUM('Call', 'SMS', 'Data') NOT NULL,
-StartTime		DATETIME	   NOT NULL,
-EndTime			DATETIME,
-DataUsedMB		DECIMAL(10, 2),
-Duration		INT,
-MessageLength	INT,
-DestinationNumber	VARCHAR(20)	NOT NULL,
-
--- ON DELETE RESTRICT: preserves usage history for audits, billing, or reports. 
-  FOREIGN KEY (SubscriptionID) REFERENCES Subscription(SubscriptionID)
-	ON DELETE RESTRICT
-) ENGINE=InnoDB;
+    UsageID INT AUTO_INCREMENT PRIMARY KEY,
+    SubscriptionID INT NOT NULL,
+    UsageType ENUM('Call', 'SMS', 'Data') NOT NULL,
+    StartTime DATETIME NOT NULL,
+    EndTime DATETIME,
+    DataUsedMB DECIMAL(10 , 2 ),
+    Duration INT,
+    MessageLength INT,
+    DestinationNumber VARCHAR(20) NOT NULL,
+    FOREIGN KEY (SubscriptionID)
+        REFERENCES Subscription (SubscriptionID)
+        ON DELETE RESTRICT
+)  ENGINE=INNODB;
 
 -- Table: SupportTicket
 -- Purpose: Stores customer support tickets and their resolution status.
 
 CREATE TABLE SupportTicket (
-TicketID		INT            AUTO_INCREMENT PRIMARY KEY,
-CustomerID	    INT			   NOT NULL,
-CreatedAt		DATETIME	   NOT NULL,
-IssueType 		VARCHAR(100)   NOT NULL,
-Status 			ENUM('Open', 'Resolved', 'Escalated') NOT NULL,
-ResolutionNote	TEXT,
- 
- -- ON DELETE RESTRICT: ensures the company has proper logs and escalation trails.
-  FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID)
-	ON DELETE RESTRICT
-) ENGINE=InnoDB;
+    TicketID INT AUTO_INCREMENT PRIMARY KEY,
+    CustomerID INT NOT NULL,
+    CreatedAt DATETIME NOT NULL,
+    IssueType VARCHAR(100) NOT NULL,
+    Status ENUM('Open', 'Resolved', 'Escalated') NOT NULL,
+    ResolutionNote TEXT,
+    FOREIGN KEY (CustomerID)
+        REFERENCES Customer (CustomerID)
+        ON DELETE RESTRICT
+)  ENGINE=INNODB;
 
 -- ------------------------------------------------------------------------------------
 -- Task 2: Populate Sample Data
@@ -204,90 +199,62 @@ VALUES
 -- using the populated telecom schema.
 -- ------------------------------------------------------------------------------------
 
--- 3.1 Simulate a failed deletion due to ON DELETE RESTRICT constraint
--- Purpose: Show that deleting a customer with related data is blocked.
-
--- DELETE FROM Customer WHERE CustomerID = 3; (code commented to illustrate the constraint function).  
--- Error Code: 1451. Cannot delete or update a parent row: a foreign key constraint fails 
--- (`telecomprovider_updated`.`subscription`, CONSTRAINT `subscription_ibfk_1` FOREIGN KEY (`CustomerID`) 
--- REFERENCES `customer` (`CustomerID`) ON DELETE RESTRICT)
+SELECT 
+    c.CustomerID, c.CustomerName
+FROM
+    Customer c
+        LEFT JOIN
+    Subscription s ON c.CustomerID = s.CustomerID
+WHERE
+    s.SubscriptionID IS NULL;
 -- ------------------------------------------------------------------------------------
-
--- 3.2 Marketing Department: 
--- 3.2.1 Find customers not in a subscription (LEFT JOIN)
--- Purpose: Identify customers who currently have no active subscriptions,
--- enabling targeted marketing campaigns to promote service plans
--- and increase customer engagement and revenue growth.
-
-SELECT c.CustomerID, c.CustomerName
-FROM Customer c
-LEFT JOIN Subscription s ON c.CustomerID = s.CustomerID
-WHERE s.SubscriptionID IS NULL;
--- ------------------------------------------------------------------------------------
-
--- 3.2.2 Identify Customers on Low-Cost Plans (< $10.00)
--- Purpose: Identify customers currently subscribed to entry-level or budget plans.
--- Supports marketing strategy by highlighting upgrade opportunities.
--- Enhancement: Includes total number of such customers and total billing revenue generated.
 
 SELECT 
     p.PlanName,
     p.MonthlyCost,
-    COUNT(DISTINCT c.CustomerID) AS TotalCustomersOnLowCostPlan,    -- COUNT with DISTINCT ensures we only count each customer once. 
-    SUM(s.TotalAmount) AS RevenueFromLowCostPlans				    -- Calculates total revenue from all subscriptions to each low-cost plan.
-FROM 
+    COUNT(DISTINCT c.CustomerID) AS TotalCustomersOnLowCostPlan,
+    SUM(s.TotalAmount) AS RevenueFromLowCostPlans
+FROM
     Subscription s
-JOIN 																-- Join Subscription with Plan to access plan details like name and cost.
+        JOIN
     Plan p ON s.PlanID = p.PlanID
-JOIN 																-- Join with Customer to count unique customer IDs associated with each subscription.
+        JOIN
     Customer c ON s.CustomerID = c.CustomerID
-WHERE 																-- Filters for only those plans that cost less than $10 per month.
+WHERE
     p.MonthlyCost < 10.00
-GROUP BY 															-- Groups the results by plan name and cost to aggregate counts and revenue per plan.
-    p.PlanName, p.MonthlyCost										
-ORDER BY 															-- Orders the result so plans with the most customers appear first (prioritization).
-    TotalCustomersOnLowCostPlan DESC;
+GROUP BY p.PlanName , p.MonthlyCost
+ORDER BY TotalCustomersOnLowCostPlan DESC;
 -- ------------------------------------------------------------------------------------
 
--- 3.2.3 Top 3 Most Active Customers by Usage
--- Purpose: Identify high-engagement customers for loyalty campaigns or upselling strategies.
--- Identify the top 3 most active customers by aggregating usage across Call (Duration), SMS (MessageLength), 
--- and Data (DataUsedMB), helping the business target high-value or heavy users.
-
 SELECT 
-    c.CustomerID,                           -- Customer ID
-    c.CustomerName,                         -- Customer name
-    SUM(CASE WHEN u.UsageType = 'Call' THEN u.Duration ELSE 0 END) AS TotalCallDuration,       -- Sum of call durations
-    SUM(CASE WHEN u.UsageType = 'SMS' THEN u.MessageLength ELSE 0 END) AS TotalSMSLength,      -- Sum of SMS lengths
-    SUM(CASE WHEN u.UsageType = 'Data' THEN u.DataUsedMB ELSE 0 END) AS TotalDataMB,           -- Sum of data used in MB
-
-    -- Total usage metric (sum of all usage types)
-    SUM(
-        COALESCE(u.Duration, 0) + 
-        COALESCE(u.MessageLength, 0) + 
-        COALESCE(u.DataUsedMB, 0)
-    ) AS OverallUsageScore                -- Combined usage score for ranking
-FROM 
+    c.CustomerID,
+    c.CustomerName,
+    SUM(CASE
+        WHEN u.UsageType = 'Call' THEN u.Duration
+        ELSE 0
+    END) AS TotalCallDuration,
+    SUM(CASE
+        WHEN u.UsageType = 'SMS' THEN u.MessageLength
+        ELSE 0
+    END) AS TotalSMSLength,
+    SUM(CASE
+        WHEN u.UsageType = 'Data' THEN u.DataUsedMB
+        ELSE 0
+    END) AS TotalDataMB,
+    SUM(COALESCE(u.Duration, 0) + COALESCE(u.MessageLength, 0) + COALESCE(u.DataUsedMB, 0)) AS OverallUsageScore
+FROM
     UsageRecord u
-JOIN 
-    Subscription s ON u.SubscriptionID = s.SubscriptionID     -- Link usage to subscription
-JOIN 
-    Customer c ON s.CustomerID = c.CustomerID                 -- Link subscription to customer
-GROUP BY 
-    c.CustomerID, c.CustomerName                              -- Group by customer
-ORDER BY 
-    OverallUsageScore DESC                                    -- Order by most active
-LIMIT 3;                                                      -- Top 3 only
+        JOIN
+    Subscription s ON u.SubscriptionID = s.SubscriptionID
+        JOIN
+    Customer c ON s.CustomerID = c.CustomerID
+GROUP BY c.CustomerID , c.CustomerName
+ORDER BY OverallUsageScore DESC
+LIMIT 3;-- Top 3 only
 -- ------------------------------------------------------------------------------------
 
--- 3.3 Finance Department: 
--- 3.3.1 Identify Customers with Unpaid Subscriptions
--- Purpose: Generate a list of customers with outstanding payments to support
--- follow-up actions by the billing or customer relations teams.
--- This helps prioritize collections, outreach, or negotiation strategies.
-
-SELECT 
-    DISTINCT c.CustomerID,						     -- DISTINCT to avoid duplicate entries in case customers have multiple unpaid subscriptions.
+SELECT DISTINCT
+    c.CustomerID,
     c.CustomerName,
     c.Email,
     c.Phone,
@@ -295,15 +262,13 @@ SELECT
     s.BillingMonth,
     s.TotalAmount,
     s.PaymentStatus
-FROM 
+FROM
     Customer c
-JOIN 
-    Subscription s ON c.CustomerID = s.CustomerID    -- Join Customer and Subscription tables
-WHERE 
-    s.PaymentStatus = 'Unpaid'                       -- Filter for unpaid subscriptions
-ORDER BY 
-    s.BillingMonth DESC, 
-    s.TotalAmount DESC;                              -- Prioritize most recent and highest unpaid amounts
+        JOIN
+    Subscription s ON c.CustomerID = s.CustomerID
+WHERE
+    s.PaymentStatus = 'Unpaid'
+ORDER BY s.BillingMonth DESC , s.TotalAmount DESC;                              -- Prioritize most recent and highest unpaid amounts
 -- ------------------------------------------------------------------------------------
 
 -- 3.3.2 Transactions & ACID Control (Atomicity, Consistency, Isolation, Durability)
@@ -315,45 +280,53 @@ ORDER BY
 ALTER TABLE Subscription							-- Add DiscountApplied flag (Run once during setup).
 ADD COLUMN DiscountApplied BOOLEAN DEFAULT FALSE;
 
-START TRANSACTION;                                  -- Controlled Transaction to Apply Discount Once & Optionally Mark as Paid.
+START TRANSACTION;  -- Controlled Transaction to Apply Discount Once & Optionally Mark as Paid.
 
-UPDATE Subscription 								-- Reset TotalAmount only if discount was already applied
-SET TotalAmount = 29.99,
+UPDATE Subscription 
+SET 
+    TotalAmount = 29.99,
     DiscountApplied = FALSE
-WHERE SubscriptionID = 9
-  AND DiscountApplied = TRUE;                       -- Reverts if previously discounted
+WHERE
+    SubscriptionID = 9
+        AND DiscountApplied = TRUE -- Reverts if previously discounted
 
-UPDATE Subscription
-SET TotalAmount = TotalAmount * 0.75,               -- Apply 25% discount 
+UPDATE Subscription 
+SET 
+    TotalAmount = TotalAmount * 0.75,
     DiscountApplied = TRUE
-WHERE SubscriptionID = 9
-  AND DiscountApplied = FALSE;                      -- Prevents repeated discount
+WHERE
+    SubscriptionID = 9
+        AND DiscountApplied = FALSE                     -- Prevents repeated discount
 
-SAVEPOINT BeforeStatusUpdate;                       -- Savepoint before marking as paid
+SAVEPOINT BeforeStatusUpdate;  -- Savepoint before marking as paid
 
-UPDATE Subscription				                    -- Attempt to update payment status
-SET PaymentStatus = 'Paid'
-WHERE SubscriptionID = 9;
+UPDATE Subscription 
+SET 
+    PaymentStatus = 'Paid'
+WHERE
+    SubscriptionID = 9
 
 ROLLBACK TO SAVEPOINT BeforeStatusUpdate;           -- Roll back the payment status change only (discount remains)
 
-COMMIT;                                             -- Finalize all changes (discount + optional status)
+COMMIT;  -- Finalize all changes (discount + optional status)
 -- ------------------------------------------------------------------------------------
 
--- 3.3.3 View: SubscriptionStatus
--- Purpose: Quickly check billing details and payment status for a specific subscription.
-
 CREATE OR REPLACE VIEW SubscriptionStatus AS
-SELECT 
-    SubscriptionID,
-    CustomerID,
-    TotalAmount,
-    PaymentStatus,
-    BillingMonth
-FROM Subscription
-WHERE SubscriptionID = 9;
+    SELECT 
+        SubscriptionID,
+        CustomerID,
+        TotalAmount,
+        PaymentStatus,
+        BillingMonth
+    FROM
+        Subscription
+    WHERE
+        SubscriptionID = 9
 
-SELECT * FROM SubscriptionStatus;
+SELECT 
+    *
+FROM
+    SubscriptionStatus
 -- ------------------------------------------------------------------------------------
 
 -- 3.3.4 Revenue Insights Using Aggregates & Window Functions
