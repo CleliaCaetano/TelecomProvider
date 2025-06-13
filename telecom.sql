@@ -332,7 +332,7 @@ FROM
 -- 3.3.4 Revenue Insights Using Aggregates & Window Functions
 -- Purpose: Analyze customer spending behavior, subscription trends, and cumulative revenue for financial monitoring.
 
-SELECT 									                     -- Total amount spent by each customer (paid only)
+SELECT                                       -- Total amount spent by each customer (paid only)
     CustomerID, 
     SUM(TotalAmount) AS TotalSpent           -- Total revenue from each customer
 FROM 
@@ -346,7 +346,7 @@ SELECT                                      -- Subscription trends: compare curr
     CustomerID,                             -- Customer ID for reference
     BillingMonth,                           -- Month of the bill
     TotalAmount,                            -- Current month's billed amount
-    LAG(TotalAmount) OVER (				        	-- Lag: Show subscription history per customer
+    LAG(TotalAmount) OVER (			            -- Lag: Show subscription history per customer
         PARTITION BY CustomerID 
         ORDER BY StartDate
     ) AS PreviousMonthAmount,              -- Previous month’s bill for comparison
