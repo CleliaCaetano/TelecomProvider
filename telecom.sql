@@ -346,7 +346,7 @@ SELECT                                      -- Subscription trends: compare curr
     CustomerID,                             -- Customer ID for reference
     BillingMonth,                           -- Month of the bill
     TotalAmount,                            -- Current month's billed amount
-    LAG(TotalAmount) OVER (			            -- Lag: Show subscription history per customer
+    LAG(TotalAmount) OVER (                 -- Lag: Show subscription history per customer
         PARTITION BY CustomerID 
         ORDER BY StartDate
     ) AS PreviousMonthAmount,              -- Previous month’s bill for comparison
@@ -375,7 +375,7 @@ CREATE PROCEDURE simulate_loop()
 BEGIN
   DECLARE i INT DEFAULT 1;
   
-  DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 					-- Basic error handling example
+  DECLARE CONTINUE HANDLER FOR SQLEXCEPTION         -- Basic error handling example
   BEGIN 
     SELECT CONCAT('Error occurred at CustomerID = ', i) AS ErrorMessage;
   END;
@@ -389,7 +389,7 @@ END $$
 
 DELIMITER ;
 
-CALL simulate_loop();														-- Run the procedure
+CALL simulate_loop();                              -- Run the procedure
 -- ------------------------------------------------------------------------------------
 
 -- 3.4.2 Ticket Creation Procedure
