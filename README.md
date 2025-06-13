@@ -27,9 +27,9 @@ This project offers a comprehensive examination of the operations of a fictional
   * `matplotlib`
   * `seaborn`
 
-## Preview
+## ER Diagram Preview
 
-![ER Diagram](er_diagram.png)
+![ER Diagram](https://raw.githubusercontent.com/CleliaCaetano/TelecomProvider/main/telecomprovider_updated.png)
 
 ## Getting Started
 
